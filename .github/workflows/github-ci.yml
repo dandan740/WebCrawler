@@ -19,13 +19,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
         run: gradle build -x test
@@ -42,7 +37,7 @@ jobs:
     needs: build_application
 
     steps:
-      - name: Set up JDK 17 
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -57,7 +52,10 @@ jobs:
       - name: Run basic functionality test
         run: |
           timeout 20s java -jar app/build/libs/app-all.jar "https://google.com" 0 > crawler_output.txt
-          if [ ! -s crawler_output.txt ]; then echo "Test selhal - žádný výstup"; exit 1; fi
+          if [ ! -s crawler_output.txt ]; then
+            echo "Test selhal - žádný výstup"
+            exit 1
+          fi
           echo "Crawler úspěšně odeslal request a vrátil data v časovém limitu."
 
       - name: Save test output
@@ -66,3 +64,4 @@ jobs:
         with:
           name: test-output
           path: crawler_output.txt
+          if-no-files-found: ignore
